@@ -1,12 +1,18 @@
 (function () {
   'use strict';
 
+  var RZP_KEY = 'rzp_live_TBJWqDQ742pLrm';
+
+  // ── Load Razorpay checkout script ──────────────────────────────────────────
+  var rzpScript = document.createElement('script');
+  rzpScript.src = 'https://checkout.razorpay.com/v1/checkout.js';
+  document.head.appendChild(rzpScript);
+
   var root = document.getElementById('shop-root');
   if (!root || typeof CLASSY_YOU_PRODUCTS === 'undefined') return;
 
   var category = root.dataset.category;
   var currentSort = 'featured';
-  var selectedSizes = {};
 
   // ── Filter & sort ──────────────────────────────────────────────────────────
   function getProducts(sort) {
@@ -21,7 +27,6 @@
     return list;
   }
 
-  // ── Format price ───────────────────────────────────────────────────────────
   function fmt(n) {
     return '₹' + n.toLocaleString('en-IN');
   }
@@ -45,12 +50,12 @@
       + '<div class="shop-card-img">'
       + (p.badge ? '<span class="shop-card-badge">' + p.badge + '</span>' : '')
       + '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy" />'
-      + '<button class="shop-card-quick cy-quick-btn">Order Now</button>'
+      + '<button class="shop-card-quick cy-quick-btn">Buy Now</button>'
       + '</div>'
       + '<div class="shop-card-body">'
       + '<h3 class="shop-card-name">' + p.name + '</h3>'
       + '<p class="shop-card-price">' + fmt(p.price) + '</p>'
-      + '<button class="shop-card-cta cy-order-btn">Order on WhatsApp</button>'
+      + '<button class="shop-card-cta cy-order-btn">Buy Now</button>'
       + '</div>'
       + '</div>';
   }
@@ -61,27 +66,21 @@
     root.innerHTML = renderToolbar(products.length)
       + '<div class="shop-grid">' + products.map(renderCard).join('') + '</div>';
 
-    // Set sort dropdown to current value
     var sel = document.getElementById('cyShopSort');
-    if (sel) sel.value = currentSort;
-
-    // Bind sort change
     if (sel) {
+      sel.value = currentSort;
       sel.addEventListener('change', function () {
         currentSort = this.value;
         render();
       });
     }
 
-    // Bind card buttons
     root.querySelectorAll('.cy-quick-btn, .cy-order-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var card = btn.closest('.shop-card');
-        openModal(card.dataset.id);
+        openModal(btn.closest('.shop-card').dataset.id);
       });
     });
 
-    // Trigger reveal
     requestAnimationFrame(function () {
       root.querySelectorAll('.reveal').forEach(function (el) {
         el.classList.add('revealed');
@@ -105,7 +104,7 @@
     modal.id = 'cyModal';
     modal.className = 'size-modal-overlay';
     modal.innerHTML =
-      '<div class="size-modal" role="dialog" aria-modal="true" aria-label="Select size for ' + p.name + '">'
+      '<div class="size-modal" role="dialog" aria-modal="true">'
       + '<button class="size-modal-close" id="cyModalClose" aria-label="Close">'
       + '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
       + '</button>'
@@ -117,44 +116,101 @@
       + '<p class="size-modal-desc">' + p.description + '</p>'
       + '<p class="size-modal-label">Select your size</p>'
       + '<div class="size-options">' + sizeButtons + '</div>'
-      + '<div class="size-modal-confirm" id="cyOrderConfirm" style="display:none">'
-      + '<a href="#" class="btn-primary cy-confirm-order" target="_blank">Confirm Order on WhatsApp</a>'
+      + '<div id="cyPayBtn" style="display:none;margin-top:16px;">'
+      + '<button class="cy-rzp-pay-btn">Pay ' + fmt(p.price) + ' — Secure Checkout</button>'
       + '</div>'
-      + '<a href="https://wa.me/917042299855?text=' + encodeURIComponent('Hi Classy You! I\'m interested in the ' + p.name + '.') + '" target="_blank" class="size-modal-wa-link">Chat without selecting size</a>'
+      + '<p class="size-modal-secure">🔒 Secured by Razorpay · UPI · Cards · NetBanking</p>'
       + '</div>'
       + '</div>';
 
     document.body.appendChild(modal);
     document.body.style.overflow = 'hidden';
 
-    // Animate in
-    requestAnimationFrame(function () {
-      modal.classList.add('open');
-    });
+    requestAnimationFrame(function () { modal.classList.add('open'); });
 
-    // Close button
     document.getElementById('cyModalClose').addEventListener('click', closeModal);
-
-    // Click outside
-    modal.addEventListener('click', function (e) {
-      if (e.target === modal) closeModal();
-    });
-
-    // ESC key
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
     document.addEventListener('keydown', handleEsc);
 
-    // Size selection
+    var selectedSize = null;
+
     modal.querySelectorAll('.cy-size-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         modal.querySelectorAll('.cy-size-btn').forEach(function (b) { b.classList.remove('selected'); });
         btn.classList.add('selected');
-        var size = btn.dataset.size;
-        var msg = 'Hi Classy You! I\'d like to order the ' + p.name + ' in size ' + size + '. 😊';
-        var confirm = document.getElementById('cyOrderConfirm');
-        var link = confirm.querySelector('.cy-confirm-order');
-        link.href = 'https://wa.me/917042299855?text=' + encodeURIComponent(msg);
-        confirm.style.display = '';
+        selectedSize = btn.dataset.size;
+        document.getElementById('cyPayBtn').style.display = '';
       });
+    });
+
+    modal.querySelector('.cy-rzp-pay-btn').addEventListener('click', function () {
+      if (!selectedSize) return;
+      closeModal();
+      openRazorpay(p, selectedSize);
+    });
+  }
+
+  // ── Razorpay checkout ──────────────────────────────────────────────────────
+  function openRazorpay(p, size) {
+    var options = {
+      key: RZP_KEY,
+      amount: p.price * 100,
+      currency: 'INR',
+      name: 'Classy You',
+      description: p.name + ' — Size ' + size,
+      image: 'WhatsApp Image 2026-07-01 at 14.09.15.jpeg',
+      handler: function (response) {
+        showSuccess(p, size, response.razorpay_payment_id);
+        // Notify owner on WhatsApp
+        var msg = 'New Order! 🎉\n\nProduct: ' + p.name
+          + '\nSize: ' + size
+          + '\nAmount: ' + fmt(p.price)
+          + '\nPayment ID: ' + response.razorpay_payment_id
+          + '\n\nPlease share delivery details.';
+        window.open('https://wa.me/917042299855?text=' + encodeURIComponent(msg), '_blank');
+      },
+      prefill: { name: '', email: '', contact: '' },
+      theme: { color: '#8B6B4A' },
+      modal: { backdropclose: false }
+    };
+
+    var rzp = new window.Razorpay(options);
+    rzp.on('payment.failed', function (response) {
+      alert('Payment failed: ' + response.error.description + '\nPlease try again.');
+    });
+    rzp.open();
+  }
+
+  // ── Order success screen ───────────────────────────────────────────────────
+  function showSuccess(p, size, paymentId) {
+    var existing = document.getElementById('cySuccess');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'cySuccess';
+    overlay.className = 'success-overlay';
+    overlay.innerHTML =
+      '<div class="success-box">'
+      + '<div class="success-icon">✓</div>'
+      + '<h2>Order Confirmed!</h2>'
+      + '<p>Thank you for your purchase.</p>'
+      + '<div class="success-details">'
+      + '<p><strong>' + p.name + '</strong> — Size ' + size + '</p>'
+      + '<p>' + fmt(p.price) + '</p>'
+      + '<p class="success-pid">Payment ID: ' + paymentId + '</p>'
+      + '</div>'
+      + '<p class="success-note">We\'ll reach out on WhatsApp shortly to confirm your delivery address.</p>'
+      + '<button class="success-close" id="cySuccessClose">Continue Shopping</button>'
+      + '</div>';
+
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+
+    requestAnimationFrame(function () { overlay.classList.add('open'); });
+
+    document.getElementById('cySuccessClose').addEventListener('click', function () {
+      overlay.classList.remove('open');
+      setTimeout(function () { overlay.remove(); document.body.style.overflow = ''; }, 300);
     });
   }
 
@@ -162,17 +218,11 @@
     var modal = document.getElementById('cyModal');
     if (!modal) return;
     modal.classList.remove('open');
-    setTimeout(function () {
-      modal.remove();
-      document.body.style.overflow = '';
-    }, 250);
+    setTimeout(function () { modal.remove(); document.body.style.overflow = ''; }, 250);
     document.removeEventListener('keydown', handleEsc);
   }
 
-  function handleEsc(e) {
-    if (e.key === 'Escape') closeModal();
-  }
+  function handleEsc(e) { if (e.key === 'Escape') closeModal(); }
 
-  // ── Boot ───────────────────────────────────────────────────────────────────
   render();
 })();

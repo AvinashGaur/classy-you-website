@@ -1372,3 +1372,110 @@ footer {
   .size-modal-img { width: 100%; height: 260px; }
   .size-modal-body { padding: 20px 20px 24px; }
 }
+
+/* ── Razorpay pay button ── */
+.cy-rzp-pay-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  background: var(--brown);
+  color: white;
+  border: none;
+  font-size: 13px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.cy-rzp-pay-btn:hover { background: var(--brown-dark); }
+
+.size-modal-secure {
+  font-size: 11px;
+  color: var(--text-light);
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* ── Order success overlay ── */
+.success-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 14, 6, 0.65);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.success-overlay.open { opacity: 1; }
+.success-overlay.open .success-box { transform: translateY(0); opacity: 1; }
+
+.success-box {
+  background: white;
+  max-width: 440px;
+  width: 100%;
+  padding: 48px 36px 40px;
+  text-align: center;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+.success-icon {
+  width: 56px; height: 56px;
+  background: var(--brown);
+  color: white;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  margin: 0 auto 20px;
+}
+
+.success-box h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.success-box > p {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 24px;
+}
+
+.success-details {
+  background: var(--cream-light);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+.success-details p { font-size: 13px; color: var(--text); margin-bottom: 4px; }
+.success-pid { font-size: 11px !important; color: var(--text-light) !important; margin-top: 6px !important; }
+
+.success-note {
+  font-size: 12px;
+  color: var(--text-light);
+  line-height: 1.6;
+  margin-bottom: 24px !important;
+}
+
+.success-close {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  background: var(--brown);
+  color: white;
+  border: none;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.success-close:hover { background: var(--brown-dark); }
