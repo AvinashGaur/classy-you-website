@@ -196,29 +196,26 @@
     rzp.open();
   }
 
-  var SHEET_URL = 'https://script.google.com/macros/s/AKfycbz8E1BgNPTNAGn-936hX5TaaB7AKoyrsmykY8EMad5mFrXleK2vxGfttI-0ePJP2Ghu5g/exec';
+  var SHEET_URL = 'https://script.google.com/macros/s/AKfycbybXRTkmb3q7V2u3eOedbhkveu2Vo5Ke7G9xslhLZEAQjiJZG_C7NJ7E5czuqewjbZ60w/exec';
 
   // ── Save order ─────────────────────────────────────────────────────────────────
   function saveOrder(p, size, customer, paymentId) {
-    var order = {
+    var address = customer.address + ', ' + customer.city + ' — ' + customer.pincode;
+    var params = new URLSearchParams({
+      action: 'saveOrder',
       paymentId: paymentId,
       product: p.name,
       size: size,
       price: p.price,
       customerName: customer.name,
       customerPhone: customer.phone,
-      customerAddress: customer.address + ', ' + customer.city + ' — ' + customer.pincode
-    };
-    // Save to Google Sheets
-    fetch(SHEET_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify(order)
-    }).catch(function() {});
+      customerAddress: address
+    });
+    fetch(SHEET_URL + '?' + params.toString()).catch(function() {});
     // Also save to localStorage as backup
     try {
       var orders = JSON.parse(localStorage.getItem('cy_orders') || '[]');
-      orders.unshift(Object.assign({ date: new Date().toISOString() }, order));
+      orders.unshift({ date: new Date().toISOString(), paymentId: paymentId, product: p.name, size: size, price: p.price, customerName: customer.name, customerPhone: customer.phone, customerAddress: address });
       if (orders.length > 300) orders = orders.slice(0, 300);
       localStorage.setItem('cy_orders', JSON.stringify(orders));
     } catch (e) {}
