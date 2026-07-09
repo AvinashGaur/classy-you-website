@@ -558,5 +558,6 @@
   window.openCart = openCart;
   window.closeCart = closeCart;
   window.removeCartItem = removeCartItem;
+  window.startCartCheckout = startCartCheckout;
   if (root) render();
 })();
