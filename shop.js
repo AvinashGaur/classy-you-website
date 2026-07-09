@@ -536,6 +536,7 @@
         customer_address: address
       })
     }).catch(function () {});
+    decrementStock(p.id, size);
     try {
       var orders = JSON.parse(localStorage.getItem('cy_orders') || '[]');
       orders.unshift({ date: new Date().toISOString(), paymentId: paymentId, product: p.name, size: size, price: p.price, customerName: customer.name, customerPhone: customer.phone, customerAddress: address });
@@ -562,6 +563,7 @@
         items: items
       })
     }).catch(function () {});
+    cart.forEach(function(item) { decrementStock(item.id, item.size); });
     try {
       var orders = JSON.parse(localStorage.getItem('cy_orders') || '[]');
       orders.unshift({ date: new Date().toISOString(), paymentId: paymentId, product: productSummary, size: 'Multiple', price: total, customerName: customer.name, customerPhone: customer.phone, customerAddress: address });
@@ -611,6 +613,44 @@
 
   function handleEsc(e) { if (e.key === 'Escape') closeModal(); }
 
+  // ── Inventory (Supabase) ──────────────────────────────────────────────────────
+  function loadInventory(callback) {
+    fetch(SUPABASE_URL + '/rest/v1/inventory?select=product_id,size,stock', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(rows) {
+      if (Array.isArray(rows)) {
+        rows.forEach(function(row) {
+          var p = CLASSY_YOU_PRODUCTS.find(function(x) { return x.id === row.product_id; });
+          if (p) {
+            if (!p.sizeStock) p.sizeStock = {};
+            p.sizeStock[row.size] = row.stock;
+          }
+        });
+      }
+      callback();
+    })
+    .catch(function() { callback(); });
+  }
+
+  function decrementStock(productId, size) {
+    fetch(SUPABASE_URL + '/rest/v1/inventory?product_id=eq.' + encodeURIComponent(productId) + '&size=eq.' + encodeURIComponent(size) + '&select=stock', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(rows) {
+      if (!rows || !rows.length) return;
+      var newStock = Math.max(0, (rows[0].stock || 0) - 1);
+      fetch(SUPABASE_URL + '/rest/v1/inventory?product_id=eq.' + encodeURIComponent(productId) + '&size=eq.' + encodeURIComponent(size), {
+        method: 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ stock: newStock })
+      });
+    })
+    .catch(function() {});
+  }
+
   // ── Init ──────────────────────────────────────────────────────────────────────
   updateCartBadge();
   window.openModal = openModal;
@@ -618,5 +658,5 @@
   window.closeCart = closeCart;
   window.removeCartItem = removeCartItem;
   window.startCartCheckout = startCartCheckout;
-  if (root) render();
+  loadInventory(function() { if (root) render(); });
 })();
