@@ -195,7 +195,7 @@
     rzp.open();
   }
 
-  var SHEET_URL = 'https://script.google.com/macros/s/AKfycbybXRTkmb3q7V2u3eOedbhkveu2Vo5Ke7G9xslhLZEAQjiJZG_C7NJ7E5czuqewjbZ60w/exec';
+  var SHEET_URL = 'https://script.google.com/macros/s/AKfycbzucPByCxE2U-Vb3Y-YhWDLzrrm062TUClOSh6kx7XrvqtToCiXEzjWyCgPeEDH_Xeb/exec';
 
   // ── Save order ─────────────────────────────────────────────────────────────────
   function saveOrder(p, size, customer, paymentId) {
