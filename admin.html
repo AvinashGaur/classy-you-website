@@ -275,13 +275,20 @@ function showPanel(name, tab) {
 // ── Orders ────────────────────────────────────────────────────────────────────
 function loadOrders() {
   document.getElementById('ordersBody').innerHTML = '<tr><td colspan="10" class="empty">Loading orders...</td></tr>';
+  var localOrders = [];
+  try { localOrders = JSON.parse(localStorage.getItem('cy_orders') || '[]'); } catch(e) {}
+
   fetch(SHEET_URL + '?action=orders')
     .then(function(r) { return r.json(); })
-    .then(function(orders) { renderOrders(orders); })
+    .then(function(sheetOrders) {
+      if (!Array.isArray(sheetOrders)) sheetOrders = [];
+      // Merge sheet + localStorage, dedup by paymentId
+      var seen = new Set(sheetOrders.map(function(o){ return o['Payment ID'] || o.paymentId; }).filter(Boolean));
+      var extra = localOrders.filter(function(o){ return !seen.has(o.paymentId); });
+      renderOrders(sheetOrders.concat(extra));
+    })
     .catch(function() {
-      var orders = [];
-      try { orders = JSON.parse(localStorage.getItem('cy_orders') || '[]'); } catch(e){}
-      renderOrders(orders);
+      renderOrders(localOrders);
     });
 }
 

@@ -1479,6 +1479,25 @@ footer {
   transition: background 0.2s;
 }
 .success-close:hover { background: var(--brown-dark); }
+.success-wa-btn {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  margin-bottom: 10px;
+  background: #25D366;
+  color: white;
+  border: none;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: background 0.2s;
+}
+.success-wa-btn:hover { background: #128C7E; }
 
 /* ── Customer delivery form in checkout modal ─────────────────────────────── */
 .cy-form-title {

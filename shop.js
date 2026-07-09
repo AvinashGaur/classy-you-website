@@ -174,8 +174,7 @@
       handler: function (response) {
         var pid = response.razorpay_payment_id;
         saveOrder(p, size, customer, pid);
-        showSuccess(p, size, customer, pid);
-        var msg = 'New Order! 🎉'
+        var waMsg = 'New Order! 🎉'
           + '\n\nProduct: ' + p.name + ' (Size ' + size + ')'
           + '\nAmount: ' + fmt(p.price)
           + '\nPayment ID: ' + pid
@@ -183,7 +182,7 @@
           + '\nName: ' + customer.name
           + '\nPhone: ' + customer.phone
           + '\nAddress: ' + customer.address + ', ' + customer.city + ' — ' + customer.pincode;
-        window.open('https://wa.me/917042299855?text=' + encodeURIComponent(msg), '_blank');
+        showSuccess(p, size, customer, pid, waMsg);
       },
       prefill: { name: customer.name, email: '', contact: customer.phone },
       theme: { color: '#8B6B4A' },
@@ -222,9 +221,11 @@
   }
 
   // ── Success screen ────────────────────────────────────────────────────────────
-  function showSuccess(p, size, customer, paymentId) {
+  function showSuccess(p, size, customer, paymentId, waMsg) {
     var existing = document.getElementById('cySuccess');
     if (existing) existing.remove();
+
+    var waUrl = 'https://wa.me/917042299855?text=' + encodeURIComponent(waMsg);
 
     var overlay = document.createElement('div');
     overlay.id = 'cySuccess';
@@ -240,7 +241,7 @@
       + '<p>Deliver to: ' + customer.address + ', ' + customer.city + ' ' + customer.pincode + '</p>'
       + '<p class="success-pid">Payment ID: ' + paymentId + '</p>'
       + '</div>'
-      + '<p class="success-note">We\'ll confirm your order on WhatsApp shortly.</p>'
+      + '<a href="' + waUrl + '" target="_blank" class="success-wa-btn">📲 Send Order on WhatsApp</a>'
       + '<button class="success-close" id="cySuccessClose">Continue Shopping</button>'
       + '</div>';
 
