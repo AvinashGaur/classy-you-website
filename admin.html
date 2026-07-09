@@ -235,6 +235,12 @@
 <script src="products.js?v=2"></script>
 <script>
 var ADMIN_PASSWORD = 'ClassyYou@Admin';
+
+// Auto-save token from setup URL (one-time visit)
+(function() {
+  var p = new URLSearchParams(window.location.search).get('t');
+  if (p) { localStorage.setItem('cy_gh_token', p); history.replaceState({}, '', window.location.pathname); }
+})();
 var editingId = null;
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -430,7 +436,7 @@ function saveToken() {
 function publishToGitHub() {
   var token = localStorage.getItem('cy_gh_token');
   if (!token) {
-    showToast('Go to Settings tab and save your GitHub token first.');
+    showToast('Setup not done. Contact your developer.');
     return;
   }
   showToast('Publishing... please wait.');
