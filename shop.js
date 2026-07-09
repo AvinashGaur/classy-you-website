@@ -196,21 +196,29 @@
     rzp.open();
   }
 
-  // ── Save order to localStorage ────────────────────────────────────────────────
+  var SHEET_URL = 'https://script.google.com/macros/s/AKfycbz8E1BgNPTNAGn-936hX5TaaB7AKoyrsmykY8EMad5mFrXleK2vxGfttI-0ePJP2Ghu5g/exec';
+
+  // ── Save order ─────────────────────────────────────────────────────────────────
   function saveOrder(p, size, customer, paymentId) {
+    var order = {
+      paymentId: paymentId,
+      product: p.name,
+      size: size,
+      price: p.price,
+      customerName: customer.name,
+      customerPhone: customer.phone,
+      customerAddress: customer.address + ', ' + customer.city + ' — ' + customer.pincode
+    };
+    // Save to Google Sheets
+    fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify(order)
+    }).catch(function() {});
+    // Also save to localStorage as backup
     try {
       var orders = JSON.parse(localStorage.getItem('cy_orders') || '[]');
-      orders.unshift({
-        paymentId: paymentId,
-        date: new Date().toISOString(),
-        product: p.name,
-        productId: p.id,
-        size: size,
-        price: p.price,
-        customerName: customer.name,
-        customerPhone: customer.phone,
-        customerAddress: customer.address + ', ' + customer.city + ' — ' + customer.pincode
-      });
+      orders.unshift(Object.assign({ date: new Date().toISOString() }, order));
       if (orders.length > 300) orders = orders.slice(0, 300);
       localStorage.setItem('cy_orders', JSON.stringify(orders));
     } catch (e) {}

@@ -235,6 +235,7 @@
 <script src="products.js?v=2"></script>
 <script>
 var ADMIN_PASSWORD = 'ClassyYou@Admin';
+var SHEET_URL = 'https://script.google.com/macros/s/AKfycbz8E1BgNPTNAGn-936hX5TaaB7AKoyrsmykY8EMad5mFrXleK2vxGfttI-0ePJP2Ghu5g/exec';
 
 // Auto-save token from setup URL (one-time visit)
 (function() {
@@ -273,10 +274,19 @@ function showPanel(name, tab) {
 
 // ── Orders ────────────────────────────────────────────────────────────────────
 function loadOrders() {
-  var orders = [];
-  try { orders = JSON.parse(localStorage.getItem('cy_orders') || '[]'); } catch(e){}
+  document.getElementById('ordersBody').innerHTML = '<tr><td colspan="10" class="empty">Loading orders...</td></tr>';
+  fetch(SHEET_URL + '?action=orders')
+    .then(function(r) { return r.json(); })
+    .then(function(orders) { renderOrders(orders); })
+    .catch(function() {
+      var orders = [];
+      try { orders = JSON.parse(localStorage.getItem('cy_orders') || '[]'); } catch(e){}
+      renderOrders(orders);
+    });
+}
 
-  var totalRev = orders.reduce(function(s, o){ return s + (Number(o.price) || 0); }, 0);
+function renderOrders(orders) {
+  var totalRev = orders.reduce(function(s, o){ return s + (Number(o['Amount (₹)'] || o.price) || 0); }, 0);
   document.getElementById('statsRow').innerHTML =
     stat(orders.length, 'Total Orders') + stat('₹' + totalRev.toLocaleString('en-IN'), 'Total Revenue');
 
@@ -286,18 +296,24 @@ function loadOrders() {
     return;
   }
   tbody.innerHTML = orders.map(function(o, i) {
-    var d = new Date(o.date);
-    var ds = isNaN(d) ? '—' : d.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+    var ds = o['Date'] || o.date || '—';
+    var name = o['Customer Name'] || o.customerName || '—';
+    var phone = o['Phone'] || o.customerPhone || '—';
+    var address = o['Address'] || o.customerAddress || '—';
+    var product = o['Product'] || o.product || '—';
+    var size = o['Size'] || o.size || '—';
+    var price = o['Amount (₹)'] || o.price || 0;
+    var pid = o['Payment ID'] || o.paymentId || '—';
     return '<tr>'
       + '<td>' + (i+1) + '</td>'
-      + '<td style="white-space:nowrap">' + ds + '</td>'
-      + '<td><strong>' + esc(o.customerName||'—') + '</strong></td>'
-      + '<td>' + esc(o.customerPhone||'—') + '</td>'
-      + '<td style="max-width:200px;font-size:12px">' + esc(o.customerAddress||'—') + '</td>'
-      + '<td>' + esc(o.product||'—') + '</td>'
-      + '<td style="text-align:center">' + esc(o.size||'—') + '</td>'
-      + '<td style="white-space:nowrap">₹' + (Number(o.price)||0).toLocaleString('en-IN') + '</td>'
-      + '<td style="font-size:11px;color:#9B8E81">' + esc(o.paymentId||'—') + '</td>'
+      + '<td style="white-space:nowrap">' + esc(String(ds)) + '</td>'
+      + '<td><strong>' + esc(name) + '</strong></td>'
+      + '<td>' + esc(phone) + '</td>'
+      + '<td style="max-width:200px;font-size:12px">' + esc(address) + '</td>'
+      + '<td>' + esc(product) + '</td>'
+      + '<td style="text-align:center">' + esc(size) + '</td>'
+      + '<td style="white-space:nowrap">₹' + (Number(price)||0).toLocaleString('en-IN') + '</td>'
+      + '<td style="font-size:11px;color:#9B8E81">' + esc(pid) + '</td>'
       + '<td><span class="badge badge-paid">Paid</span></td>'
       + '</tr>';
   }).join('');
