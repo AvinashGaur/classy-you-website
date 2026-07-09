@@ -67,6 +67,13 @@
     .toast{position:fixed;bottom:24px;right:24px;background:#2C2416;color:#EDE8DF;padding:12px 20px;border-radius:4px;font-size:13px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none}
     .toast.show{opacity:1}
     .prod-img-preview{width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid #E8E2D9}
+    .img-upload-wrap{display:flex;gap:8px;align-items:center}
+    .img-upload-wrap .f-input{flex:1}
+    .btn-upload{background:#fff;color:#8B6B4A;border:1px solid #8B6B4A;padding:10px 14px;border-radius:4px;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap}
+    .btn-upload:hover{background:#8B6B4A;color:#fff}
+    .img-preview-box{margin-top:8px;display:none}
+    .img-preview-box img{width:80px;height:80px;object-fit:cover;border-radius:4px;border:1px solid #E8E2D9}
+    .upload-progress{font-size:12px;color:#9B8E81;margin-top:4px}
     /* Responsive */
     @media(max-width:600px){.admin-content{padding:16px}.stat-card{min-width:130px}}
   </style>
@@ -151,8 +158,16 @@
             <input class="f-input" id="pBadge" placeholder="e.g. New, Sale, Hot" />
           </div>
           <div>
-            <label>Image Filename *</label>
-            <input class="f-input" id="pImage" placeholder="e.g. WhatsApp Image 2026-07-01 at 14.03.33.jpeg" />
+            <label>Product Image *</label>
+            <div class="img-upload-wrap">
+              <input class="f-input" id="pImage" placeholder="URL auto-fills after upload" readonly />
+              <button type="button" class="btn-upload" onclick="document.getElementById('imgFileInput').click()">Upload Image</button>
+              <input type="file" id="imgFileInput" accept="image/*" style="display:none" onchange="uploadToCloudinary(this)" />
+            </div>
+            <div class="img-preview-box" id="imgPreviewBox">
+              <img id="imgPreview" src="" alt="Preview" />
+              <div class="upload-progress" id="uploadStatus"></div>
+            </div>
           </div>
           <div>
             <label>Sizes (comma separated) *</label>
@@ -366,6 +381,8 @@ function resetForm() {
   editingId = null;
   document.getElementById('prodFormTitle').textContent = 'Add New Product';
   ['pName','pPrice','pBadge','pImage','pSizes','pDesc'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('imgPreviewBox').style.display = 'none';
+  document.getElementById('uploadStatus').textContent = '';
   document.getElementById('pCategory').value = 'dresses';
   document.getElementById('pFeatured').value = 'true';
 }
@@ -384,6 +401,49 @@ function download(filename, content, type) {
   a.href = URL.createObjectURL(new Blob([content], {type: type}));
   a.download = filename;
   a.click();
+}
+
+// ── Cloudinary image upload ───────────────────────────────────────────────────
+function uploadToCloudinary(input) {
+  var file = input.files[0];
+  if (!file) return;
+
+  var statusEl = document.getElementById('uploadStatus');
+  var previewBox = document.getElementById('imgPreviewBox');
+  var previewImg = document.getElementById('imgPreview');
+
+  previewImg.src = URL.createObjectURL(file);
+  previewBox.style.display = 'block';
+  statusEl.textContent = 'Uploading...';
+  document.getElementById('pImage').value = '';
+
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', 'classyyou');
+
+  fetch('https://api.cloudinary.com/v1_1/ws0w6fww/image/upload', {
+    method: 'POST',
+    body: formData
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.secure_url) {
+      document.getElementById('pImage').value = data.secure_url;
+      previewImg.src = data.secure_url;
+      statusEl.textContent = 'Uploaded successfully!';
+      statusEl.style.color = '#2E7D32';
+      showToast('Image uploaded!');
+    } else {
+      statusEl.textContent = 'Upload failed. Check your Cloudinary preset.';
+      statusEl.style.color = '#c0392b';
+    }
+  })
+  .catch(function() {
+    statusEl.textContent = 'Upload failed. Check internet connection.';
+    statusEl.style.color = '#c0392b';
+  });
+
+  input.value = '';
 }
 
 function showToast(msg) {
