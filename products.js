@@ -1,5 +1,21 @@
 var CLASSY_YOU_PRODUCTS = [
   {
+    "id": "1moretest",
+    "name": "1MoreTest",
+    "price": 1,
+    "category": "coord-sets",
+    "image": "https://res.cloudinary.com/ws0w6fww/image/upload/v1783614914/b3se4ogemlfkci9amjon.jpg",
+    "badge": null,
+    "sizes": [
+      "S"
+    ],
+    "featured": true,
+    "description": "",
+    "sizeStock": {
+      "S": 1
+    }
+  },
+  {
     "id": "finaltets",
     "name": "Finaltets",
     "price": 1,
