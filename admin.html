@@ -67,6 +67,17 @@
     .toast{position:fixed;bottom:24px;right:24px;background:#2C2416;color:#EDE8DF;padding:12px 20px;border-radius:4px;font-size:13px;z-index:9999;opacity:0;transition:opacity 0.3s;pointer-events:none}
     .toast.show{opacity:1}
     .prod-img-preview{width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid #E8E2D9}
+    .prod-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .prod-filter{background:#fff;border:1px solid #D5C9BC;color:#6B4E32;padding:6px 14px;border-radius:20px;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s}
+    .prod-filter:hover,.prod-filter.active{background:#8B6B4A;color:#fff;border-color:#8B6B4A}
+    .badge-cancelled{background:#f8d7da;color:#721c24;padding:3px 8px;border-radius:3px;font-size:10px;letter-spacing:1px;text-transform:uppercase}
+    .size-stock-grid{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+    .size-stock-item{display:flex;flex-direction:column;align-items:center;gap:4px}
+    .size-stock-item label{font-size:11px;color:#6B4E32;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+    .size-stock-cell{font-size:12px}
+    .size-stock-tag{display:inline-flex;align-items:center;gap:4px;margin:2px 4px 2px 0;background:#f3efe9;padding:3px 6px;border-radius:4px}
+    .size-stock-tag.sold-out-tag{background:#fde;opacity:0.7}
+    .stock-inline{width:40px;padding:2px 4px;border:1px solid #D5C9BC;border-radius:3px;font-size:11px;text-align:center;font-family:'Inter',sans-serif}
     .img-upload-wrap{display:flex;gap:8px;align-items:center}
     .img-upload-wrap .f-input{flex:1}
     .btn-upload{background:#fff;color:#8B6B4A;border:1px solid #8B6B4A;padding:10px 14px;border-radius:4px;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap}
@@ -172,11 +183,15 @@
           </div>
           <div>
             <label>Sizes (comma separated) *</label>
-            <input class="f-input" id="pSizes" placeholder="XS, S, M, L, XL" />
+            <input class="f-input" id="pSizes" placeholder="XS, S, M, L, XL" onblur="generateSizeStockInputs()" />
           </div>
           <div class="span2">
             <label>Description</label>
             <input class="f-input" id="pDesc" placeholder="Short description" />
+          </div>
+          <div class="span2">
+            <label>Stock per Size <span style="font-weight:400;color:#9B8E81;font-size:11px">(enter sizes above first, then set qty — set 0 to mark that size sold out)</span></label>
+            <div id="sizeStockContainer" class="size-stock-grid"></div>
           </div>
           <div>
             <label>Featured?</label>
@@ -196,6 +211,14 @@
         <h2>All Products</h2>
         <button class="btn-brown btn-sm" onclick="publishToGitHub()">🚀 Publish to Website</button>
       </div>
+      <div class="prod-filter-bar">
+        <button class="prod-filter active" onclick="filterProducts('all',this)">All</button>
+        <button class="prod-filter" onclick="filterProducts('dresses',this)">Dresses</button>
+        <button class="prod-filter" onclick="filterProducts('tops',this)">Tops</button>
+        <button class="prod-filter" onclick="filterProducts('bottoms',this)">Bottoms</button>
+        <button class="prod-filter" onclick="filterProducts('coord-sets',this)">Co-ord Sets</button>
+        <button class="prod-filter" onclick="filterProducts('sold-out',this)">Sold Out</button>
+      </div>
       <div class="tbl-wrap">
         <table>
           <thead>
@@ -204,9 +227,8 @@
               <th>Name</th>
               <th>Category</th>
               <th>Price</th>
-              <th>Sizes</th>
+              <th>Stock per Size</th>
               <th>Badge</th>
-              <th>Featured</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -345,29 +367,86 @@ function exportCSV() {
 
 // ── Products ──────────────────────────────────────────────────────────────────
 var products = [];
+var activeFilter = 'all';
 
 function loadProducts() {
   products = (typeof CLASSY_YOU_PRODUCTS !== 'undefined') ? CLASSY_YOU_PRODUCTS.slice() : [];
+  products = products.map(function(p) {
+    // Migrate: build sizeStock from sizes if missing
+    if (!p.sizeStock) {
+      var ss = {};
+      (p.sizes || []).forEach(function(s) { ss[s] = 10; });
+      p.sizeStock = ss;
+    }
+    return p;
+  });
   renderProductsTable();
+}
+
+function filterProducts(cat, btn) {
+  activeFilter = cat;
+  document.querySelectorAll('.prod-filter').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderProductsTable();
+}
+
+function isAllSoldOut(p) {
+  var ss = p.sizeStock || {};
+  var vals = Object.values(ss);
+  return vals.length > 0 && vals.every(function(v){ return v === 0; });
 }
 
 function renderProductsTable() {
   var tbody = document.getElementById('productsBody');
-  if (!products.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">No products.</td></tr>'; return; }
-  tbody.innerHTML = products.map(function(p, i) {
-    return '<tr>'
+  var filtered = products.filter(function(p) {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'sold-out') return isAllSoldOut(p);
+    return p.category === activeFilter;
+  });
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">No products.</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(function(p) {
+    var i = products.indexOf(p);
+    var ss = p.sizeStock || {};
+    var stockCells = (p.sizes || []).map(function(s) {
+      var qty = ss[s] !== undefined ? ss[s] : 10;
+      return '<span class="size-stock-tag' + (qty === 0 ? ' sold-out-tag' : '') + '">'
+        + s + ':<input type="number" class="stock-inline" value="' + qty + '" min="0" '
+        + 'onchange="updateSizeStock(' + i + ',\'' + s + '\',this.value)" /></span>';
+    }).join('');
+    var allOut = isAllSoldOut(p);
+    return '<tr' + (allOut ? ' style="opacity:0.6"' : '') + '>'
       + '<td><img class="prod-img-preview" src="' + esc(p.image) + '" onerror="this.style.display=\'none\'" /></td>'
       + '<td><strong>' + esc(p.name) + '</strong></td>'
       + '<td style="text-transform:capitalize">' + esc(p.category) + '</td>'
       + '<td>₹' + (p.price||0).toLocaleString('en-IN') + '</td>'
-      + '<td style="font-size:12px">' + (p.sizes||[]).join(', ') + '</td>'
+      + '<td class="size-stock-cell">' + stockCells + '</td>'
       + '<td>' + (p.badge ? '<span class="badge badge-paid">' + esc(p.badge) + '</span>' : '—') + '</td>'
-      + '<td style="text-align:center">' + (p.featured ? '✓' : '') + '</td>'
       + '<td style="white-space:nowrap">'
       + '<button class="btn-outline2 btn-sm" style="margin-right:6px" onclick="editProduct(' + i + ')">Edit</button>'
       + '<button class="btn-danger btn-sm" onclick="deleteProduct(' + i + ')">Delete</button>'
       + '</td>'
       + '</tr>';
+  }).join('');
+}
+
+function updateSizeStock(i, size, val) {
+  var n = parseInt(val, 10);
+  if (isNaN(n) || n < 0) n = 0;
+  if (!products[i].sizeStock) products[i].sizeStock = {};
+  products[i].sizeStock[size] = n;
+}
+
+function generateSizeStockInputs(existing) {
+  var sizesRaw = document.getElementById('pSizes').value.trim();
+  var sizes = sizesRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+  var container = document.getElementById('sizeStockContainer');
+  if (!sizes.length) { container.innerHTML = '<p style="font-size:12px;color:#9B8E81">Enter sizes above first</p>'; return; }
+  container.innerHTML = sizes.map(function(s) {
+    var qty = (existing && existing[s] !== undefined) ? existing[s] : 10;
+    return '<div class="size-stock-item">'
+      + '<label>' + s + '</label>'
+      + '<input type="number" class="f-input" id="sstock_' + s.replace(/\//g,'_') + '" value="' + qty + '" min="0" style="width:70px;padding:8px" />'
+      + '</div>';
   }).join('');
 }
 
@@ -385,8 +464,13 @@ function saveProduct() {
 
   var sizes = sizesRaw.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
   var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  var sizeStock = {};
+  sizes.forEach(function(s) {
+    var input = document.getElementById('sstock_' + s.replace(/\//g,'_'));
+    sizeStock[s] = input ? (parseInt(input.value, 10) || 0) : 10;
+  });
 
-  var prod = { id: id, name: name, price: price, category: cat, image: image, badge: badge || null, sizes: sizes, featured: featured, description: desc };
+  var prod = { id: id, name: name, price: price, category: cat, image: image, badge: badge || null, sizes: sizes, featured: featured, description: desc, sizeStock: sizeStock };
 
   if (editingId !== null) {
     products[editingId] = prod;
@@ -411,6 +495,7 @@ function editProduct(i) {
   document.getElementById('pSizes').value = (p.sizes||[]).join(', ');
   document.getElementById('pDesc').value = p.description || '';
   document.getElementById('pFeatured').value = p.featured ? 'true' : 'false';
+  generateSizeStockInputs(p.sizeStock || {});
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -429,6 +514,7 @@ function resetForm() {
   document.getElementById('uploadStatus').textContent = '';
   document.getElementById('pCategory').value = 'dresses';
   document.getElementById('pFeatured').value = 'true';
+  document.getElementById('sizeStockContainer').innerHTML = '<p style="font-size:12px;color:#9B8E81">Enter sizes above first</p>';
 }
 
 function downloadProductsJS() {

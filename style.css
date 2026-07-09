@@ -1339,6 +1339,11 @@ footer {
 }
 .size-btn:hover { border-color: var(--brown); color: var(--brown); }
 .size-btn.selected { background: var(--brown); color: white; border-color: var(--brown); }
+.size-btn.size-sold-out { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+.size-btn.size-sold-out:hover { border-color: #ccc; color: inherit; }
+.size-out-label, .size-low-label { display: block; font-size: 9px; letter-spacing: 0; margin-top: 2px; }
+.size-out-label { color: #c0392b; }
+.size-low-label { color: var(--brown); }
 
 .size-modal-confirm { margin-top: 4px; }
 .size-modal-confirm .btn-primary {

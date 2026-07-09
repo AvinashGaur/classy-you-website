@@ -286,13 +286,21 @@
 
   // ── WhatsApp helper ───────────────────────────────────────────────────────────
   function openWhatsApp(msg) {
-    var a = document.createElement('a');
-    a.href = 'https://wa.me/917042299855?text=' + encodeURIComponent(msg);
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function () { if (a.parentNode) a.remove(); }, 200);
+    var url = 'https://wa.me/917042299855?text=' + encodeURIComponent(msg);
+    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      // On mobile: location.href opens WhatsApp app directly, never blocked
+      setTimeout(function () { window.location.href = url; }, 800);
+    } else {
+      // On desktop: try opening in new tab
+      var a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { if (a.parentNode) a.remove(); }, 200);
+    }
   }
 
   // ── Shop Grid ─────────────────────────────────────────────────────────────────
@@ -316,18 +324,28 @@
       + '</select></div>';
   }
 
+  function isProductSoldOut(p) {
+    var ss = p.sizeStock;
+    if (!ss) return false;
+    var vals = Object.values(ss);
+    return vals.length > 0 && vals.every(function(v){ return v === 0; });
+  }
+
   function renderCard(p, idx) {
     var delay = (idx % 6) * 60;
-    return '<div class="shop-card reveal" style="transition-delay:' + delay + 'ms" data-id="' + p.id + '">'
+    var soldOut = isProductSoldOut(p);
+    return '<div class="shop-card reveal' + (soldOut ? ' sold-out-card' : '') + '" style="transition-delay:' + delay + 'ms" data-id="' + p.id + '">'
       + '<div class="shop-card-img">'
-      + (p.badge ? '<span class="shop-card-badge">' + p.badge + '</span>' : '')
+      + (soldOut ? '<span class="shop-card-badge sold-out-badge">Sold Out</span>' : (p.badge ? '<span class="shop-card-badge">' + p.badge + '</span>' : ''))
       + '<img src="' + p.image + '" alt="' + p.name + '" loading="lazy" />'
-      + '<button class="shop-card-quick cy-quick-btn">Quick View</button>'
+      + (!soldOut ? '<button class="shop-card-quick cy-quick-btn">Quick View</button>' : '')
       + '</div>'
       + '<div class="shop-card-body">'
       + '<h3 class="shop-card-name">' + p.name + '</h3>'
       + '<p class="shop-card-price">' + fmt(p.price) + '</p>'
-      + '<button class="shop-card-cta cy-order-btn">Add to Cart</button>'
+      + (soldOut
+        ? '<button class="shop-card-cta" disabled style="opacity:0.5;cursor:not-allowed">Sold Out</button>'
+        : '<button class="shop-card-cta cy-order-btn">Add to Cart</button>')
       + '</div></div>';
   }
 
@@ -355,12 +373,17 @@
   function openModal(id) {
     var p = CLASSY_YOU_PRODUCTS.find(function (x) { return x.id === id; });
     if (!p) return;
+    if (isProductSoldOut(p)) { alert(p.name + ' is currently sold out.'); return; }
 
     var existing = document.getElementById('cyModal');
     if (existing) existing.remove();
 
     var sizeButtons = p.sizes.map(function (s) {
-      return '<button class="size-btn cy-size-btn" data-size="' + s + '">' + s + '</button>';
+      var qty = p.sizeStock ? (p.sizeStock[s] !== undefined ? p.sizeStock[s] : 10) : 10;
+      var out = qty === 0;
+      return '<button class="size-btn cy-size-btn' + (out ? ' size-sold-out' : '') + '" data-size="' + s + '" ' + (out ? 'disabled title="Sold out"' : '') + '>'
+        + s + (out ? '<span class="size-out-label">Out</span>' : (qty <= 3 ? '<span class="size-low-label">Only ' + qty + '</span>' : ''))
+        + '</button>';
     }).join('');
 
     var modal = document.createElement('div');
