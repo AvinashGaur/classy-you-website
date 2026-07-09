@@ -254,10 +254,11 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="products.js?v=2"></script>
+<script src="products.js?v=3"></script>
 <script>
 var ADMIN_PASSWORD = 'ClassyYou@Admin';
-var SHEET_URL = 'https://script.google.com/macros/s/AKfycbzucPByCxE2U-Vb3Y-YhWDLzrrm062TUClOSh6kx7XrvqtToCiXEzjWyCgPeEDH_Xeb/exec';
+var SUPABASE_URL = 'https://tfqzlvugwjyeeigmdndn.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_F_2GYyU4RReDmw3P7LmwYQ_gxuyoDCu';
 
 // Auto-save token from setup URL (one-time visit)
 (function() {
@@ -297,25 +298,23 @@ function showPanel(name, tab) {
 // ── Orders ────────────────────────────────────────────────────────────────────
 function loadOrders() {
   document.getElementById('ordersBody').innerHTML = '<tr><td colspan="10" class="empty">Loading orders...</td></tr>';
-  var localOrders = [];
-  try { localOrders = JSON.parse(localStorage.getItem('cy_orders') || '[]'); } catch(e) {}
-
-  fetch(SHEET_URL + '?action=orders')
-    .then(function(r) { return r.json(); })
-    .then(function(sheetOrders) {
-      if (!Array.isArray(sheetOrders)) sheetOrders = [];
-      // Merge sheet + localStorage, dedup by paymentId
-      var seen = new Set(sheetOrders.map(function(o){ return o['Payment ID'] || o.paymentId; }).filter(Boolean));
-      var extra = localOrders.filter(function(o){ return !seen.has(o.paymentId); });
-      renderOrders(sheetOrders.concat(extra));
-    })
-    .catch(function() {
-      renderOrders(localOrders);
-    });
+  fetch(SUPABASE_URL + '/rest/v1/orders?select=*&order=created_at.desc', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(orders) {
+    if (!Array.isArray(orders)) orders = [];
+    renderOrders(orders);
+  })
+  .catch(function() {
+    var localOrders = [];
+    try { localOrders = JSON.parse(localStorage.getItem('cy_orders') || '[]'); } catch(e) {}
+    renderOrders(localOrders);
+  });
 }
 
 function renderOrders(orders) {
-  var totalRev = orders.reduce(function(s, o){ return s + (Number(o['Amount (₹)'] || o.price) || 0); }, 0);
+  var totalRev = orders.reduce(function(s, o){ return s + (Number(o.amount || o['Amount (₹)'] || o.price) || 0); }, 0);
   document.getElementById('statsRow').innerHTML =
     stat(orders.length, 'Total Orders') + stat('₹' + totalRev.toLocaleString('en-IN'), 'Total Revenue');
 
@@ -325,22 +324,30 @@ function renderOrders(orders) {
     return;
   }
   tbody.innerHTML = orders.map(function(o, i) {
-    var ds = o['Date'] || o.date || '—';
-    var name = o['Customer Name'] || o.customerName || '—';
-    var phone = o['Phone'] || o.customerPhone || '—';
-    var address = o['Address'] || o.customerAddress || '—';
-    var product = o['Product'] || o.product || '—';
-    var size = o['Size'] || o.size || '—';
-    var price = o['Amount (₹)'] || o.price || 0;
-    var pid = o['Payment ID'] || o.paymentId || '—';
+    var ds = o.created_at || o['Date'] || o.date || '—';
+    if (ds && ds.indexOf('T') > -1) ds = new Date(ds).toLocaleString('en-IN');
+    var name = o.customer_name || o['Customer Name'] || o.customerName || '—';
+    var phone = o.customer_phone || o['Phone'] || o.customerPhone || '—';
+    var address = o.customer_address || o['Address'] || o.customerAddress || '—';
+    var items = o.items;
+    var product, size;
+    if (items && Array.isArray(items) && items.length) {
+      product = items.map(function(it){ return it.name + ' (' + it.size + ') ×' + (it.qty||1); }).join('<br>');
+      size = '—';
+    } else {
+      product = esc(o.product || o['Product'] || '—');
+      size = esc(o.size || o['Size'] || '—');
+    }
+    var price = o.amount || o['Amount (₹)'] || o.price || 0;
+    var pid = o.payment_id || o['Payment ID'] || o.paymentId || '—';
     return '<tr>'
       + '<td>' + (i+1) + '</td>'
       + '<td style="white-space:nowrap">' + esc(String(ds)) + '</td>'
       + '<td><strong>' + esc(name) + '</strong></td>'
       + '<td>' + esc(phone) + '</td>'
-      + '<td style="max-width:200px;font-size:12px">' + esc(address) + '</td>'
-      + '<td>' + esc(product) + '</td>'
-      + '<td style="text-align:center">' + esc(size) + '</td>'
+      + '<td style="max-width:180px;font-size:12px">' + esc(address) + '</td>'
+      + '<td style="font-size:12px">' + product + '</td>'
+      + '<td style="text-align:center">' + size + '</td>'
       + '<td style="white-space:nowrap">₹' + (Number(price)||0).toLocaleString('en-IN') + '</td>'
       + '<td style="font-size:11px;color:#9B8E81">' + esc(pid) + '</td>'
       + '<td><span class="badge badge-paid">Paid</span></td>'
@@ -353,16 +360,27 @@ function stat(val, lbl) {
 }
 
 function exportCSV() {
-  var orders = [];
-  try { orders = JSON.parse(localStorage.getItem('cy_orders') || '[]'); } catch(e){}
-  if (!orders.length) { showToast('No orders to export.'); return; }
-  var headers = ['#','Date','Customer Name','Phone','Address','Product','Size','Price','Payment ID'];
-  var rows = orders.map(function(o, i) {
-    return [i+1, o.date, o.customerName, o.customerPhone, o.customerAddress, o.product, o.size, o.price, o.paymentId]
-      .map(function(v){ return '"' + String(v||'').replace(/"/g,'""') + '"'; }).join(',');
-  });
-  var csv = [headers.join(',')].concat(rows).join('\n');
-  download('classy-you-orders.csv', csv, 'text/csv');
+  fetch(SUPABASE_URL + '/rest/v1/orders?select=*&order=created_at.desc', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(orders) {
+    if (!Array.isArray(orders) || !orders.length) { showToast('No orders to export.'); return; }
+    var headers = ['#','Date','Customer Name','Phone','Address','Product','Size','Amount','Payment ID'];
+    var rows = orders.map(function(o, i) {
+      var items = o.items;
+      var product = items && Array.isArray(items) ? items.map(function(it){ return it.name + ' (' + it.size + ')'; }).join(' | ') : (o.product || '');
+      var size = items && Array.isArray(items) ? 'Multiple' : (o.size || '');
+      return [i+1,
+        o.created_at ? new Date(o.created_at).toLocaleString('en-IN') : '',
+        o.customer_name || '', o.customer_phone || '', o.customer_address || '',
+        product, size, o.amount || 0, o.payment_id || ''
+      ].map(function(v){ return '"' + String(v||'').replace(/"/g,'""') + '"'; }).join(',');
+    });
+    var csv = [headers.join(',')].concat(rows).join('\n');
+    download('classy-you-orders.csv', csv, 'text/csv');
+  })
+  .catch(function() { showToast('Export failed. Check connection.'); });
 }
 
 // ── Products ──────────────────────────────────────────────────────────────────
@@ -568,13 +586,15 @@ function publishToGitHub() {
       body: JSON.stringify({ message: 'Update products via admin panel', content: encoded, sha: data.sha })
     });
   })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.content) {
-      showToast('Published! Site will update in ~2 minutes.');
+  .then(function(r) {
+    if (r.ok) {
+      showToast('✅ Published! Site will update in ~2 minutes.');
     } else {
-      showToast('Publish failed — check your token in Settings.');
-      localStorage.removeItem('cy_gh_token');
+      r.json().then(function(d) {
+        showToast('Publish failed: ' + (d.message || r.status) + '. Go to Settings → re-save token.');
+      }).catch(function() {
+        showToast('Publish failed (HTTP ' + r.status + '). Go to Settings → re-save token.');
+      });
     }
   })
   .catch(function() { showToast('Publish failed. Check your connection.'); });

@@ -2,7 +2,8 @@
   'use strict';
 
   var RZP_KEY = 'rzp_live_TBJWqDQ742pLrm';
-  var SHEET_URL = 'https://script.google.com/macros/s/AKfycbzucPByCxE2U-Vb3Y-YhWDLzrrm062TUClOSh6kx7XrvqtToCiXEzjWyCgPeEDH_Xeb/exec';
+  var SUPABASE_URL = 'https://tfqzlvugwjyeeigmdndn.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_F_2GYyU4RReDmw3P7LmwYQ_gxuyoDCu';
 
   var rzpScript = document.createElement('script');
   rzpScript.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -225,9 +226,7 @@
       image: 'WhatsApp Image 2026-07-01 at 14.09.15.jpeg',
       handler: function (response) {
         var pid = response.razorpay_payment_id;
-        cart.forEach(function (item) {
-          saveOrder(item, item.size, customer, pid);
-        });
+        saveCartOrder(cart, customer, pid, total);
         saveCart([]);
         var itemLines = cart.map(function (i) {
           return '• ' + i.name + ' (Size ' + i.size + ') ×' + (i.qty || 1) + ' — ' + fmt(i.price * (i.qty || 1));
@@ -513,22 +512,59 @@
   }
 
   // ── Save Order ────────────────────────────────────────────────────────────────
+  function sbHeaders() {
+    return {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    };
+  }
+
   function saveOrder(p, size, customer, paymentId) {
     var address = customer.address + ', ' + customer.city + ' — ' + customer.pincode;
-    var params = new URLSearchParams({
-      action: 'saveOrder',
-      paymentId: paymentId,
-      product: p.name,
-      size: size,
-      price: p.price,
-      customerName: customer.name,
-      customerPhone: customer.phone,
-      customerAddress: address
-    });
-    fetch(SHEET_URL + '?' + params.toString()).catch(function () {});
+    fetch(SUPABASE_URL + '/rest/v1/orders', {
+      method: 'POST',
+      headers: sbHeaders(),
+      body: JSON.stringify({
+        payment_id: paymentId,
+        product: p.name,
+        size: size,
+        amount: p.price,
+        customer_name: customer.name,
+        customer_phone: customer.phone,
+        customer_address: address
+      })
+    }).catch(function () {});
     try {
       var orders = JSON.parse(localStorage.getItem('cy_orders') || '[]');
       orders.unshift({ date: new Date().toISOString(), paymentId: paymentId, product: p.name, size: size, price: p.price, customerName: customer.name, customerPhone: customer.phone, customerAddress: address });
+      if (orders.length > 300) orders = orders.slice(0, 300);
+      localStorage.setItem('cy_orders', JSON.stringify(orders));
+    } catch (e) {}
+  }
+
+  function saveCartOrder(cart, customer, paymentId, total) {
+    var address = customer.address + ', ' + customer.city + ' — ' + customer.pincode;
+    var items = cart.map(function(i) { return { name: i.name, size: i.size, qty: i.qty || 1, price: i.price }; });
+    var productSummary = cart.map(function(i) { return i.name + ' (' + i.size + ')'; }).join(', ');
+    fetch(SUPABASE_URL + '/rest/v1/orders', {
+      method: 'POST',
+      headers: sbHeaders(),
+      body: JSON.stringify({
+        payment_id: paymentId,
+        product: productSummary,
+        size: items.length > 1 ? 'Multiple' : (items[0] && items[0].size),
+        amount: total,
+        customer_name: customer.name,
+        customer_phone: customer.phone,
+        customer_address: address,
+        items: items
+      })
+    }).catch(function () {});
+    try {
+      var orders = JSON.parse(localStorage.getItem('cy_orders') || '[]');
+      orders.unshift({ date: new Date().toISOString(), paymentId: paymentId, product: productSummary, size: 'Multiple', price: total, customerName: customer.name, customerPhone: customer.phone, customerAddress: address });
       if (orders.length > 300) orders = orders.slice(0, 300);
       localStorage.setItem('cy_orders', JSON.stringify(orders));
     } catch (e) {}
