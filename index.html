@@ -137,7 +137,7 @@
         <div class="product-card-img">
           <span class="product-card-badge">New</span>
           <img src="WhatsApp Image 2026-07-01 at 14.03.33.jpeg" alt="Emerald Dream Gown" />
-          <div class="product-card-action">Order on WhatsApp</div>
+          <button class="product-card-action" onclick="openModal('emerald-dream-gown')">Buy Now</button>
         </div>
         <p class="product-card-name">Emerald Dream Gown</p>
         <p class="product-card-price">₹ 2,499</p>
@@ -146,7 +146,7 @@
         <div class="product-card-img">
           <span class="product-card-badge">New</span>
           <img src="WhatsApp Image 2026-07-01 at 14.03.23.jpeg" alt="Lace Hem Maxi Skirt" />
-          <div class="product-card-action">Order on WhatsApp</div>
+          <button class="product-card-action" onclick="openModal('lace-hem-maxi-skirt')">Buy Now</button>
         </div>
         <p class="product-card-name">Lace Hem Maxi Skirt</p>
         <p class="product-card-price">₹ 1,299</p>
@@ -155,7 +155,7 @@
         <div class="product-card-img">
           <span class="product-card-badge">New</span>
           <img src="WhatsApp Image 2026-07-01 at 14.04.05.jpeg" alt="Butter Yellow Co-ord Set" />
-          <div class="product-card-action">Order on WhatsApp</div>
+          <button class="product-card-action" onclick="openModal('butter-yellow-coord-set')">Buy Now</button>
         </div>
         <p class="product-card-name">Butter Yellow Co-ord Set</p>
         <p class="product-card-price">₹ 1,499</p>
@@ -164,7 +164,7 @@
         <div class="product-card-img">
           <span class="product-card-badge">New</span>
           <img src="WhatsApp Image 2026-07-01 at 14.04.19.jpeg" alt="Ruffle Tops Collection" />
-          <div class="product-card-action">Order on WhatsApp</div>
+          <button class="product-card-action" onclick="openModal('pink-ruffle-peplum-blouse')">Buy Now</button>
         </div>
         <p class="product-card-name">Ruffle Tops Collection</p>
         <p class="product-card-price">Starting ₹ 799</p>
@@ -324,6 +324,8 @@
   </div>
 </footer>
 
+<script src="products.js"></script>
+<script src="shop.js"></script>
 <script>
   function openMobileNav() { document.getElementById('mobileNav').classList.add('open'); document.body.style.overflow='hidden'; }
   function closeMobileNav() { document.getElementById('mobileNav').classList.remove('open'); document.body.style.overflow=''; }

@@ -8,10 +8,10 @@
   rzpScript.src = 'https://checkout.razorpay.com/v1/checkout.js';
   document.head.appendChild(rzpScript);
 
-  var root = document.getElementById('shop-root');
-  if (!root || typeof CLASSY_YOU_PRODUCTS === 'undefined') return;
+  if (typeof CLASSY_YOU_PRODUCTS === 'undefined') return;
 
-  var category = root.dataset.category;
+  var root = document.getElementById('shop-root');
+  var category = root ? root.dataset.category : null;
   var currentSort = 'featured';
 
   // ── Filter & sort ──────────────────────────────────────────────────────────
@@ -224,5 +224,7 @@
 
   function handleEsc(e) { if (e.key === 'Escape') closeModal(); }
 
-  render();
+  window.openModal = openModal;
+
+  if (root) render();
 })();
