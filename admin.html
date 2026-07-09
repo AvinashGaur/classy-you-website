@@ -100,6 +100,7 @@
   <div class="admin-tabs">
     <div class="admin-tab active" onclick="showPanel('orders',this)">Orders</div>
     <div class="admin-tab" onclick="showPanel('products',this)">Products</div>
+    <div class="admin-tab" onclick="showPanel('settings',this)">Settings</div>
   </div>
   <div class="admin-content">
 
@@ -193,7 +194,7 @@
 
       <div class="section-head">
         <h2>All Products</h2>
-        <button class="btn-brown btn-sm" onclick="downloadProductsJS()">Download products.js</button>
+        <button class="btn-brown btn-sm" onclick="publishToGitHub()">🚀 Publish to Website</button>
       </div>
       <div class="tbl-wrap">
         <table>
@@ -211,6 +212,18 @@
           </thead>
           <tbody id="productsBody"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="panel" id="panel-settings">
+      <div class="prod-form" style="max-width:520px">
+        <h3>GitHub Settings</h3>
+        <p style="font-size:13px;color:#9B8E81;margin-bottom:20px">Required for "Publish to Website" to work. Your token is saved only in this browser — never uploaded anywhere.</p>
+        <label>GitHub Personal Access Token</label>
+        <input class="f-input" id="ghToken" type="password" placeholder="Paste token here" style="margin-bottom:12px" />
+        <button class="btn-brown" onclick="saveToken()">Save Token</button>
+        <p style="font-size:12px;color:#9B8E81;margin-top:12px" id="tokenStatus"></p>
       </div>
     </div>
 
@@ -232,6 +245,8 @@ function doLogin() {
     document.getElementById('adminWrap').style.display = 'flex';
     loadOrders();
     loadProducts();
+    var saved = localStorage.getItem('cy_gh_token');
+    if (saved) { document.getElementById('ghToken').value = saved; document.getElementById('tokenStatus').textContent = 'Token already saved.'; }
   } else {
     document.getElementById('loginErr').style.display = 'block';
   }
@@ -401,6 +416,53 @@ function download(filename, content, type) {
   a.href = URL.createObjectURL(new Blob([content], {type: type}));
   a.download = filename;
   a.click();
+}
+
+// ── GitHub publish ────────────────────────────────────────────────────────────
+function saveToken() {
+  var t = document.getElementById('ghToken').value.trim();
+  if (!t) { showToast('Enter a token first.'); return; }
+  localStorage.setItem('cy_gh_token', t);
+  document.getElementById('tokenStatus').textContent = 'Token saved!';
+  showToast('Token saved. You can now publish products.');
+}
+
+function publishToGitHub() {
+  var token = localStorage.getItem('cy_gh_token');
+  if (!token) {
+    showToast('Go to Settings tab and save your GitHub token first.');
+    return;
+  }
+  showToast('Publishing... please wait.');
+  var REPO = 'AvinashGaur/classy-you-website';
+  var FILE = 'products.js';
+  fetch('https://api.github.com/repos/' + REPO + '/contents/' + FILE, {
+    headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var content = 'var CLASSY_YOU_PRODUCTS = ' + JSON.stringify(products, null, 2) + ';\n';
+    var encoded = btoa(unescape(encodeURIComponent(content)));
+    return fetch('https://api.github.com/repos/' + REPO + '/contents/' + FILE, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + token,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: 'Update products via admin panel', content: encoded, sha: data.sha })
+    });
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.content) {
+      showToast('Published! Site will update in ~2 minutes.');
+    } else {
+      showToast('Publish failed — check your token in Settings.');
+      localStorage.removeItem('cy_gh_token');
+    }
+  })
+  .catch(function() { showToast('Publish failed. Check your connection.'); });
 }
 
 // ── Cloudinary image upload ───────────────────────────────────────────────────
