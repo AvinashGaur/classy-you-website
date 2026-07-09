@@ -8,7 +8,7 @@ const CLASSY_YOU_PRODUCTS = [
   {
     id: 'emerald-dream-gown',
     name: 'Emerald Dream Gown',
-    price: 2499,
+    price: 1,
     category: 'dresses',
     image: 'WhatsApp Image 2026-07-01 at 14.03.33.jpeg',
     badge: 'New',
