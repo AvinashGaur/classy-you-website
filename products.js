@@ -1,5 +1,18 @@
 var CLASSY_YOU_PRODUCTS = [
   {
+    "id": "test3rd",
+    "name": "test3rd",
+    "price": 1,
+    "category": "coord-sets",
+    "image": "https://res.cloudinary.com/ws0w6fww/image/upload/v1783607048/t56n6ccj2ivpcxaya7ms.jpg",
+    "badge": null,
+    "sizes": [
+      "S"
+    ],
+    "featured": true,
+    "description": ""
+  },
+  {
     "id": "testavi",
     "name": "testavi",
     "price": 2,
