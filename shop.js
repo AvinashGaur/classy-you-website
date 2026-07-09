@@ -161,13 +161,6 @@
       image: 'WhatsApp Image 2026-07-01 at 14.09.15.jpeg',
       handler: function (response) {
         showSuccess(p, size, response.razorpay_payment_id);
-        // Notify owner on WhatsApp
-        var msg = 'New Order! 🎉\n\nProduct: ' + p.name
-          + '\nSize: ' + size
-          + '\nAmount: ' + fmt(p.price)
-          + '\nPayment ID: ' + response.razorpay_payment_id
-          + '\n\nPlease share delivery details.';
-        window.open('https://wa.me/917042299855?text=' + encodeURIComponent(msg), '_blank');
       },
       prefill: { name: '', email: '', contact: '' },
       theme: { color: '#8B6B4A' },
