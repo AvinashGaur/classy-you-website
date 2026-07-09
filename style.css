@@ -1479,3 +1479,32 @@ footer {
   transition: background 0.2s;
 }
 .success-close:hover { background: var(--brown-dark); }
+
+/* ── Customer delivery form in checkout modal ─────────────────────────────── */
+.cy-form-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-light, #9B8E81);
+  margin: 20px 0 10px;
+  font-weight: 500;
+}
+.cy-field {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #D5C9BC;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+  background: #fff;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.cy-field:focus { border-color: var(--brown); }
+.cy-field-row { display: flex; gap: 8px; }
+.cy-field-row .cy-field { flex: 1; margin-bottom: 8px; }
