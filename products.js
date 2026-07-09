@@ -1,5 +1,18 @@
 var CLASSY_YOU_PRODUCTS = [
   {
+    "id": "testavi",
+    "name": "testavi",
+    "price": 2,
+    "category": "bottoms",
+    "image": "https://res.cloudinary.com/ws0w6fww/image/upload/v1783589388/cmuiahdhbfsy7cgz075t.jpg",
+    "badge": null,
+    "sizes": [
+      "M"
+    ],
+    "featured": true,
+    "description": ""
+  },
+  {
     "id": "testabc",
     "name": "testabc",
     "price": 1,
