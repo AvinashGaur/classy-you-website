@@ -1,5 +1,21 @@
 var CLASSY_YOU_PRODUCTS = [
   {
+    "id": "finaltets",
+    "name": "Finaltets",
+    "price": 1,
+    "category": "dresses",
+    "image": "https://res.cloudinary.com/ws0w6fww/image/upload/v1783614048/lmtygsubbdr2meefkqgu.jpg",
+    "badge": null,
+    "sizes": [
+      "S"
+    ],
+    "featured": true,
+    "description": "",
+    "sizeStock": {
+      "S": 10
+    }
+  },
+  {
     "id": "test3rd",
     "name": "test3rd",
     "price": 1,
@@ -10,7 +26,10 @@ var CLASSY_YOU_PRODUCTS = [
       "S"
     ],
     "featured": true,
-    "description": ""
+    "description": "",
+    "sizeStock": {
+      "S": 10
+    }
   },
   {
     "id": "testavi",
@@ -23,7 +42,10 @@ var CLASSY_YOU_PRODUCTS = [
       "M"
     ],
     "featured": true,
-    "description": ""
+    "description": "",
+    "sizeStock": {
+      "M": 10
+    }
   },
   {
     "id": "testabc",
@@ -36,7 +58,10 @@ var CLASSY_YOU_PRODUCTS = [
       "s"
     ],
     "featured": true,
-    "description": ""
+    "description": "",
+    "sizeStock": {
+      "s": 10
+    }
   },
   {
     "id": "emerald-dream-gown",
@@ -53,7 +78,14 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": true,
-    "description": "A flowing emerald gown with delicate fabric and a silhouette that moves beautifully. Perfect for evening occasions and special events."
+    "description": "A flowing emerald gown with delicate fabric and a silhouette that moves beautifully. Perfect for evening occasions and special events.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   },
   {
     "id": "black-wrap-midi-dress",
@@ -70,7 +102,14 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": true,
-    "description": "A timeless wrap dress in classic black. Flatters every figure and transitions seamlessly from day to evening."
+    "description": "A timeless wrap dress in classic black. Flatters every figure and transitions seamlessly from day to evening.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   },
   {
     "id": "floral-midi-dress",
@@ -87,7 +126,14 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": false,
-    "description": "A beautiful floral midi dress with a feminine silhouette. Perfect for brunch, garden parties, and daytime occasions."
+    "description": "A beautiful floral midi dress with a feminine silhouette. Perfect for brunch, garden parties, and daytime occasions.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   },
   {
     "id": "pink-ruffle-peplum-blouse",
@@ -104,7 +150,14 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": true,
-    "description": "A charming peplum blouse with feminine ruffle detail at the hem. Pairs beautifully with high-waisted bottoms."
+    "description": "A charming peplum blouse with feminine ruffle detail at the hem. Pairs beautifully with high-waisted bottoms.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   },
   {
     "id": "hot-pink-short-sleeve-shirt",
@@ -121,7 +174,14 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": false,
-    "description": "A bold hot-pink collared shirt for effortless, confident everyday style. Tuck it in or wear it loose."
+    "description": "A bold hot-pink collared shirt for effortless, confident everyday style. Tuck it in or wear it loose.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   },
   {
     "id": "white-linen-blouse",
@@ -138,7 +198,14 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": false,
-    "description": "A classic white linen blouse — the ultimate wardrobe essential. Breathable, elegant, and endlessly versatile."
+    "description": "A classic white linen blouse — the ultimate wardrobe essential. Breathable, elegant, and endlessly versatile.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   },
   {
     "id": "sage-ruched-top",
@@ -155,7 +222,14 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": false,
-    "description": "A soft sage green ruched top with a flattering gathered front. Easy to dress up or down."
+    "description": "A soft sage green ruched top with a flattering gathered front. Easy to dress up or down.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   },
   {
     "id": "lace-hem-maxi-skirt",
@@ -172,7 +246,14 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": true,
-    "description": "An elegant maxi skirt with delicate lace hem detail. Floaty fabric that moves with you."
+    "description": "An elegant maxi skirt with delicate lace hem detail. Floaty fabric that moves with you.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   },
   {
     "id": "wide-leg-denim-jeans",
@@ -190,7 +271,15 @@ var CLASSY_YOU_PRODUCTS = [
       "32"
     ],
     "featured": false,
-    "description": "Relaxed wide-leg denim in a classic mid-blue wash. High-rise fit for a long-legged silhouette."
+    "description": "Relaxed wide-leg denim in a classic mid-blue wash. High-rise fit for a long-legged silhouette.",
+    "sizeStock": {
+      "26": 10,
+      "27": 10,
+      "28": 10,
+      "29": 10,
+      "30": 10,
+      "32": 10
+    }
   },
   {
     "id": "sage-pleated-midi-skirt",
@@ -207,7 +296,14 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": false,
-    "description": "A soft sage pleated midi skirt with a flowing silhouette. Effortless and polished."
+    "description": "A soft sage pleated midi skirt with a flowing silhouette. Effortless and polished.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   },
   {
     "id": "butter-yellow-coord-set",
@@ -224,7 +320,14 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": true,
-    "description": "A dreamy butter-yellow co-ord set — cropped top and wide-leg pants. The set that sells out first every drop."
+    "description": "A dreamy butter-yellow co-ord set — cropped top and wide-leg pants. The set that sells out first every drop.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   },
   {
     "id": "rust-linen-coord-set",
@@ -241,7 +344,14 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": false,
-    "description": "A breezy linen co-ord set in a warm rust tone. Lightweight and effortlessly stylish in the heat."
+    "description": "A breezy linen co-ord set in a warm rust tone. Lightweight and effortlessly stylish in the heat.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   },
   {
     "id": "ivory-coord-set",
@@ -258,6 +368,13 @@ var CLASSY_YOU_PRODUCTS = [
       "XL"
     ],
     "featured": false,
-    "description": "A clean ivory cotton co-ord for a polished, minimal look. Perfect for daytime outings and casual events."
+    "description": "A clean ivory cotton co-ord for a polished, minimal look. Perfect for daytime outings and casual events.",
+    "sizeStock": {
+      "XS": 10,
+      "S": 10,
+      "M": 10,
+      "L": 10,
+      "XL": 10
+    }
   }
 ];
